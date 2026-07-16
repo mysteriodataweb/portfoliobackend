@@ -7,6 +7,7 @@ const pool = new pg.Pool({
   database: process.env.DB_NAME || "portfolio",
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "",
+  ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false,
 });
 
 pool.on("error", (err) => {
