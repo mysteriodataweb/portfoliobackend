@@ -1,0 +1,8 @@
+node_modules
+.env
+uploads/images/*
+uploads/cv/*
+uploads/profile/*
+!uploads/images/.gitkeep
+!uploads/cv/.gitkeep
+!uploads/profile/.gitkeep
