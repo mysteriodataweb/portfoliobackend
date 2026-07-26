@@ -1,31 +1,19 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
-import { fileURLToPath } from "url";
-import { query } from "../../db.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { createClient } from "@supabase/supabase-js";
 
 const router = Router();
 
-const imageStorage = multer.diskStorage({
-  destination: path.join(__dirname, "../../../uploads/images"),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-const cvStorage = multer.diskStorage({
-  destination: path.join(__dirname, "../../../uploads/cv"),
-  filename: (req, file, cb) => {
-    cb(null, "cv" + path.extname(file.originalname));
-  },
-});
+const BUCKET = "images";
 
-const imageUpload = multer({
-  storage: imageStorage,
+const memoryUpload = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
@@ -39,44 +27,36 @@ const imageUpload = multer({
   },
 });
 
-const cvUpload = multer({
-  storage: cvStorage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Seuls les fichiers PDF sont acceptes"));
-    }
-  },
-});
-
-function getBaseUrl(req) {
-  return process.env.BACKEND_URL || (req.protocol + "://" + req.get("host"));
-}
-
-router.post("/image", imageUpload.single("image"), (req, res) => {
+router.post("/image", memoryUpload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Aucun fichier uploade" });
   }
-  var base = getBaseUrl(req);
-  res.json({ url: base + "/uploads/images/" + req.file.filename });
-});
 
-router.post("/cv", cvUpload.single("cv"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "Aucun fichier uploade" });
-  }
   try {
-    var base = getBaseUrl(req);
-    var cvUrl = base + "/uploads/cv/" + req.file.filename;
-    await query(
-      "INSERT INTO site_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2",
-      ["cv_path", cvUrl]
-    );
-    res.json({ url: cvUrl });
+    const ext = path.extname(req.file.originalname);
+    const filename = Date.now() + "-" + Math.round(Math.random() * 1e9) + ext;
+    const filePath = "projects/" + filename;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(filePath, req.file.buffer, {
+        contentType: req.file.mimetype,
+        cacheControl: "31536000",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Erreur upload Supabase:", uploadError);
+      return res.status(500).json({ error: "Erreur lors de l'upload" });
+    }
+
+    const { data: urlData } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(filePath);
+
+    res.json({ url: urlData.publicUrl });
   } catch (err) {
-    console.error("Erreur upload cv:", err);
+    console.error("Erreur upload:", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
