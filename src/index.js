@@ -29,6 +29,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy (Render, Vercel, etc.)
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(helmet());
 app.use(morgan("dev"));
