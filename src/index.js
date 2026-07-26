@@ -109,4 +109,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
   console.log(`📋 API disponible sur http://localhost:${PORT}/api`);
+  console.log(`🔑 DATABASE_URL: ${process.env.DATABASE_URL ? "DEFINIE" : "NON DEFINIE"}`);
+  console.log(`🌐 FRONTEND_URL: ${process.env.FRONTEND_URL || "non defini"}`);
 });

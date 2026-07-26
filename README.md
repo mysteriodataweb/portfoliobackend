@@ -29,7 +29,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=portfolio
 DB_USER=postgres
-DB_PASSWORD=
+DB_PASSWORD=Alfred@77__77?
 
 # Admin
 ADMIN_USERNAME=admin
@@ -56,47 +56,47 @@ npm start
 
 ## Endpoints publics
 
-| Méthode | Route | Description |
-|---------|-------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/projects` | Liste des projets |
-| GET | `/api/projects/featured` | Projets mis en avant |
-| GET | `/api/projects/category/:cat` | Filtrer par catégorie |
-| GET | `/api/projects/:slug` | Détail d'un projet |
-| GET | `/api/blog` | Liste des articles |
-| GET | `/api/blog/:slug` | Détail d'un article |
-| GET | `/api/skills` | Compétences & certifications |
-| GET | `/api/profile` | Profil public |
-| GET | `/api/cv` | URL du CV |
-| POST | `/api/contact` | Envoyer un message |
-| POST | `/api/auth/login` | Connexion admin |
+| Méthode | Route                         | Description                  |
+| ------- | ----------------------------- | ---------------------------- |
+| GET     | `/api/health`                 | Health check                 |
+| GET     | `/api/projects`               | Liste des projets            |
+| GET     | `/api/projects/featured`      | Projets mis en avant         |
+| GET     | `/api/projects/category/:cat` | Filtrer par catégorie        |
+| GET     | `/api/projects/:slug`         | Détail d'un projet           |
+| GET     | `/api/blog`                   | Liste des articles           |
+| GET     | `/api/blog/:slug`             | Détail d'un article          |
+| GET     | `/api/skills`                 | Compétences & certifications |
+| GET     | `/api/profile`                | Profil public                |
+| GET     | `/api/cv`                     | URL du CV                    |
+| POST    | `/api/contact`                | Envoyer un message           |
+| POST    | `/api/auth/login`             | Connexion admin              |
 
 ## Endpoints admin (JWT requis)
 
-| Méthode | Route | Description |
-|---------|-------|-------------|
-| GET | `/api/admin/projects` | Liste tous les projets |
-| POST | `/api/admin/projects` | Créer un projet |
-| PUT | `/api/admin/projects/:id` | Modifier un projet |
-| DELETE | `/api/admin/projects/:id` | Supprimer un projet |
-| GET | `/api/admin/blog` | Liste tous les articles |
-| POST | `/api/admin/blog` | Créer un article |
-| PUT | `/api/admin/blog/:id` | Modifier un article |
-| DELETE | `/api/admin/blog/:id` | Supprimer un article |
-| GET | `/api/admin/skills` | Compétences & certifications |
-| POST | `/api/admin/skills/categories` | Créer une catégorie |
-| PUT | `/api/admin/skills/categories/:id` | Modifier une catégorie |
-| DELETE | `/api/admin/skills/categories/:id` | Supprimer une catégorie |
-| POST | `/api/admin/skills` | Ajouter une compétence |
-| PUT | `/api/admin/skills/:id` | Modifier une compétence |
-| DELETE | `/api/admin/skills/:id` | Supprimer une compétence |
-| POST | `/api/admin/skills/certifications` | Ajouter une certification |
-| PUT | `/api/admin/skills/certifications/:id` | Modifier |
-| DELETE | `/api/admin/skills/certifications/:id` | Supprimer |
-| GET | `/api/admin/profile` | Profil complet |
-| PUT | `/api/admin/profile` | Modifier le profil |
-| POST | `/api/admin/upload/image` | Upload d'image |
-| POST | `/api/admin/upload/cv` | Upload du CV (PDF) |
+| Méthode | Route                                  | Description                  |
+| ------- | -------------------------------------- | ---------------------------- |
+| GET     | `/api/admin/projects`                  | Liste tous les projets       |
+| POST    | `/api/admin/projects`                  | Créer un projet              |
+| PUT     | `/api/admin/projects/:id`              | Modifier un projet           |
+| DELETE  | `/api/admin/projects/:id`              | Supprimer un projet          |
+| GET     | `/api/admin/blog`                      | Liste tous les articles      |
+| POST    | `/api/admin/blog`                      | Créer un article             |
+| PUT     | `/api/admin/blog/:id`                  | Modifier un article          |
+| DELETE  | `/api/admin/blog/:id`                  | Supprimer un article         |
+| GET     | `/api/admin/skills`                    | Compétences & certifications |
+| POST    | `/api/admin/skills/categories`         | Créer une catégorie          |
+| PUT     | `/api/admin/skills/categories/:id`     | Modifier une catégorie       |
+| DELETE  | `/api/admin/skills/categories/:id`     | Supprimer une catégorie      |
+| POST    | `/api/admin/skills`                    | Ajouter une compétence       |
+| PUT     | `/api/admin/skills/:id`                | Modifier une compétence      |
+| DELETE  | `/api/admin/skills/:id`                | Supprimer une compétence     |
+| POST    | `/api/admin/skills/certifications`     | Ajouter une certification    |
+| PUT     | `/api/admin/skills/certifications/:id` | Modifier                     |
+| DELETE  | `/api/admin/skills/certifications/:id` | Supprimer                    |
+| GET     | `/api/admin/profile`                   | Profil complet               |
+| PUT     | `/api/admin/profile`                   | Modifier le profil           |
+| POST    | `/api/admin/upload/image`              | Upload d'image               |
+| POST    | `/api/admin/upload/cv`                 | Upload du CV (PDF)           |
 
 ## Structure
 
@@ -140,5 +140,3 @@ server/
 - `/admin/competences` — Gestion des compétences
 - `/admin/profil` — Édition du profil
 - `/admin/cv` — Upload du CV
-
-

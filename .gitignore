@@ -6,3 +6,5 @@ uploads/profile/*
 !uploads/images/.gitkeep
 !uploads/cv/.gitkeep
 !uploads/profile/.gitkeep
+
+/src/generated/prisma

@@ -9,7 +9,7 @@ const pool = new pg.Pool({
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "",
 });
-
+ 
 const query = (text, params) => pool.query(text, params);
 
 const schema = `
