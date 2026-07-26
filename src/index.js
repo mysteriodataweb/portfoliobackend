@@ -34,9 +34,22 @@ app.use(helmet());
 app.use(morgan("dev"));
 
 // CORS
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalized = origin.replace(/\/+$/, "");
+      const isAllowed = allowedOrigins.some(
+        (o) => o.replace(/\/+$/, "") === normalized
+      );
+      callback(null, isAllowed);
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
