@@ -1,8 +1,30 @@
 import pg from "pg";
 import "dotenv/config";
 
-const pool = process.env.DATABASE_URL
-  ? new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+function sanitizeConnectionString(url) {
+  if (!url) return url;
+  const schemeEnd = url.indexOf("://");
+  if (schemeEnd === -1) return url;
+  const scheme = url.slice(0, schemeEnd + 3);
+  const rest = url.slice(schemeEnd + 3);
+  const lastAt = rest.lastIndexOf("@");
+  if (lastAt === -1) return url;
+  const userInfo = rest.slice(0, lastAt);
+  const hostPart = rest.slice(lastAt + 1);
+  const colonIdx = userInfo.indexOf(":");
+  if (colonIdx === -1) return url;
+  const user = userInfo.slice(0, colonIdx);
+  const pass = userInfo.slice(colonIdx + 1);
+  const encodedPass = encodeURIComponent(pass);
+  return `${scheme}${user}:${encodedPass}@${hostPart}`;
+}
+
+const connectionString = process.env.DATABASE_URL
+  ? sanitizeConnectionString(process.env.DATABASE_URL)
+  : null;
+
+const pool = connectionString
+  ? new pg.Pool({ connectionString, ssl: { rejectUnauthorized: false } })
   : new pg.Pool({
       host: process.env.DB_HOST || "localhost",
       port: parseInt(process.env.DB_PORT || "5432"),
