@@ -34,7 +34,7 @@ const imageUpload = multer({
     if (ext && mime) {
       cb(null, true);
     } else {
-      cb(new Error("Seules les images (jpeg, jpg, png, gif, webp) sont acceptées"));
+      cb(new Error("Seules les images (jpeg, jpg, png, gif, webp) sont acceptees"));
     }
   },
 });
@@ -46,28 +46,35 @@ const cvUpload = multer({
     if (file.mimetype === "application/pdf") {
       cb(null, true);
     } else {
-      cb(new Error("Seuls les fichiers PDF sont acceptés"));
+      cb(new Error("Seuls les fichiers PDF sont acceptes"));
     }
   },
 });
 
+function getBaseUrl(req) {
+  return process.env.BACKEND_URL || (req.protocol + "://" + req.get("host"));
+}
+
 router.post("/image", imageUpload.single("image"), (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: "Aucun fichier uploadé" });
+    return res.status(400).json({ error: "Aucun fichier uploade" });
   }
-  res.json({ url: `/uploads/images/${req.file.filename}` });
+  var base = getBaseUrl(req);
+  res.json({ url: base + "/uploads/images/" + req.file.filename });
 });
 
 router.post("/cv", cvUpload.single("cv"), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: "Aucun fichier uploadé" });
+    return res.status(400).json({ error: "Aucun fichier uploade" });
   }
   try {
+    var base = getBaseUrl(req);
+    var cvUrl = base + "/uploads/cv/" + req.file.filename;
     await query(
       "INSERT INTO site_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2",
-      ["cv_path", `/uploads/cv/${req.file.filename}`]
+      ["cv_path", cvUrl]
     );
-    res.json({ url: `/uploads/cv/${req.file.filename}` });
+    res.json({ url: cvUrl });
   } catch (err) {
     console.error("Erreur upload cv:", err);
     res.status(500).json({ error: "Erreur serveur" });
