@@ -4,6 +4,16 @@ import { query } from "../db.js";
 
 const router = Router();
 
+router.get("/", async (req, res) => {
+  try {
+    const { profile, sections, skills } = await getCVData();
+    res.json({ profile, sections, skills });
+  } catch (err) {
+    console.error("Erreur get CV:", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 async function getCVData() {
   const profileResult = await query("SELECT * FROM profile ORDER BY id LIMIT 1");
   const profile = profileResult.rows[0] || {};
