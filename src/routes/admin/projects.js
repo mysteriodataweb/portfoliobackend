@@ -71,18 +71,43 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const {
-      title, slug, category, shortDescription, fullDescription,
-      image, techStack, githubUrl, demoUrl, date, featured,
-      published, context, approach, results, challenges,
-    } = req.body;
+    const fields = {
+      title: req.body.title,
+      slug: req.body.slug,
+      category: req.body.category,
+      short_description: req.body.shortDescription,
+      full_description: req.body.fullDescription,
+      image: req.body.image,
+      tech_stack: Array.isArray(req.body.techStack) ? JSON.stringify(req.body.techStack) : req.body.techStack,
+      github_url: req.body.githubUrl,
+      demo_url: req.body.demoUrl,
+      date: req.body.date,
+      featured: req.body.featured,
+      published: req.body.published,
+      context: req.body.context,
+      approach: req.body.approach,
+      results: req.body.results,
+      challenges: req.body.challenges,
+    };
 
-    const techStackJson = Array.isArray(techStack) ? JSON.stringify(techStack) : techStack;
+    const setClauses = [];
+    const values = [];
+    let idx = 1;
+
+    for (const [col, val] of Object.entries(fields)) {
+      if (val !== undefined) {
+        setClauses.push(`${col}=$${idx}`);
+        values.push(val);
+        idx++;
+      }
+    }
+
+    setClauses.push(`updated_at=NOW()`);
+    values.push(req.params.id);
 
     const result = await query(
-      `UPDATE projects SET slug=$1, title=$2, category=$3, short_description=$4, full_description=$5, image=$6, tech_stack=$7, github_url=$8, demo_url=$9, date=$10, featured=$11, published=$12, context=$13, approach=$14, results=$15, challenges=$16, updated_at=NOW()
-       WHERE id=$17 RETURNING *`,
-      [slug, title, category, shortDescription, fullDescription, image, techStackJson, githubUrl, demoUrl, date, featured, published, context, approach, results, challenges, req.params.id]
+      `UPDATE projects SET ${setClauses.join(", ")} WHERE id=$${idx} RETURNING *`,
+      values
     );
     res.json(mapProject(result.rows[0]));
   } catch (err) {
