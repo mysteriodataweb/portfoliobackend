@@ -5,12 +5,18 @@ import { createClient } from "@supabase/supabase-js";
 
 const router = Router();
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
-
 const BUCKET = "images";
+
+let _supabase;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY
+    );
+  }
+  return _supabase;
+}
 
 const memoryUpload = multer({
   storage: multer.memoryStorage(),
@@ -33,6 +39,7 @@ router.post("/image", memoryUpload.single("image"), async (req, res) => {
   }
 
   try {
+    const supabase = getSupabase();
     const ext = path.extname(req.file.originalname);
     const filename = Date.now() + "-" + Math.round(Math.random() * 1e9) + ext;
     const filePath = "projects/" + filename;
