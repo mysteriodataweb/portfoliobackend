@@ -48,7 +48,7 @@ router.post("/", async (req, res) => {
     const result = await query(
       `INSERT INTO blog_posts (slug, title, excerpt, category, tags, image, date, read_time, content, published)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [slug, title, excerpt, category, tagsJson, image, date, readTime, content, published]
+      [slug, title, excerpt, category, tagsJson, image, date, readTime, content, published ?? true]
     );
     res.json(mapBlog(result.rows[0]));
   } catch (err) {
@@ -59,12 +59,37 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const { slug, title, excerpt, category, tags, image, date, readTime, content, published } = req.body;
-    const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : tags;
+    const fields = {
+      slug: req.body.slug,
+      title: req.body.title,
+      excerpt: req.body.excerpt,
+      category: req.body.category,
+      tags: Array.isArray(req.body.tags) ? JSON.stringify(req.body.tags) : req.body.tags,
+      image: req.body.image,
+      date: req.body.date,
+      read_time: req.body.readTime,
+      content: req.body.content,
+      published: req.body.published,
+    };
+
+    const setClauses = [];
+    const values = [];
+    let idx = 1;
+
+    for (const [col, val] of Object.entries(fields)) {
+      if (val !== undefined) {
+        setClauses.push(`${col}=$${idx}`);
+        values.push(val);
+        idx++;
+      }
+    }
+
+    setClauses.push(`updated_at=NOW()`);
+    values.push(req.params.id);
+
     const result = await query(
-      `UPDATE blog_posts SET slug=$1, title=$2, excerpt=$3, category=$4, tags=$5, image=$6, date=$7, read_time=$8, content=$9, published=$10, updated_at=NOW()
-       WHERE id=$11 RETURNING *`,
-      [slug, title, excerpt, category, tagsJson, image, date, readTime, content, published, req.params.id]
+      `UPDATE blog_posts SET ${setClauses.join(", ")} WHERE id=$${idx} RETURNING *`,
+      values
     );
     res.json(mapBlog(result.rows[0]));
   } catch (err) {
