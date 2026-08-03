@@ -74,6 +74,14 @@ const schema = `
     year VARCHAR(10)
   );
 
+  CREATE TABLE IF NOT EXISTS tools (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    image VARCHAR(500),
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+
   CREATE TABLE IF NOT EXISTS profile (
     id SERIAL PRIMARY KEY,
     full_name VARCHAR(255) NOT NULL,
@@ -199,6 +207,29 @@ const seedData = `
   );
 `;
 
+const toolsSeed = `
+  INSERT INTO tools (name, image, sort_order)
+  VALUES
+    ('TypeScript', 'https://cdn.simpleicons.org/typescript/3178C6', 1),
+    ('React', 'https://cdn.simpleicons.org/react/61DAFB', 2),
+    ('Next.js', 'https://cdn.simpleicons.org/nextdotjs/000000', 3),
+    ('TailwindCSS', 'https://cdn.simpleicons.org/tailwindcss/38BDF8', 4),
+    ('Python', 'https://cdn.simpleicons.org/python/3776AB', 5),
+    ('Node.js', 'https://cdn.simpleicons.org/nodedotjs/5FA04E', 6),
+    ('PostgreSQL', 'https://cdn.simpleicons.org/postgresql/4169E1', 7),
+    ('Docker', 'https://cdn.simpleicons.org/docker/2496ED', 8),
+    ('FastAPI', 'https://cdn.simpleicons.org/fastapi/05998B', 9),
+    ('PyTorch', 'https://cdn.simpleicons.org/pytorch/EE4C2C', 10),
+    ('Scikit-learn', 'https://cdn.simpleicons.org/scikitlearn/F7931E', 11),
+    ('Hugging Face', 'https://cdn.simpleicons.org/huggingface/FFD21E', 12),
+    ('Pandas', 'https://cdn.simpleicons.org/pandas/150458', 13),
+    ('Git', 'https://cdn.simpleicons.org/git/F05032', 14),
+    ('GitHub', 'https://cdn.simpleicons.org/github/181717', 15),
+    ('Linux', 'https://cdn.simpleicons.org/linux/FCC624', 16),
+    ('Vercel', 'https://cdn.simpleicons.org/vercel/000000', 17),
+    ('AWS', 'https://cdn.simpleicons.org/amazonaws/FF9900', 18)
+`;
+
 async function initDB() {
   try {
     console.log(" Initialisation de la base de données...");
@@ -232,6 +263,13 @@ async function initDB() {
       console.log(` Admin créé : ${process.env.ADMIN_USERNAME || "admin"}`);
     } else {
       console.log(" La base de données contient déjà des données.");
+    }
+
+    const toolCount = await query("SELECT COUNT(*) FROM tools");
+    if (parseInt(toolCount.rows[0].count) === 0) {
+      console.log(" Insertion des outils par défaut...");
+      await query(toolsSeed);
+      console.log(" Outils insérés avec succès.");
     }
 
     console.log(" Initialisation terminée !");

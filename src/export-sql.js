@@ -82,6 +82,14 @@ CREATE TABLE IF NOT EXISTS certifications (
   year VARCHAR(10)
 );
 
+CREATE TABLE IF NOT EXISTS tools (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  image VARCHAR(500),
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS profile (
   id SERIAL PRIMARY KEY,
   full_name VARCHAR(255) NOT NULL,
@@ -120,7 +128,7 @@ CREATE TABLE IF NOT EXISTS messages (
 `;
 
   // Export data
-  const tables = ["projects", "blog_posts", "skill_categories", "skills", "certifications", "profile", "admin_users", "messages"];
+  const tables = ["projects", "blog_posts", "skill_categories", "skills", "certifications", "tools", "profile", "admin_users", "messages"];
 
   for (const table of tables) {
     const result = await localPool.query(`SELECT * FROM ${table}`);
