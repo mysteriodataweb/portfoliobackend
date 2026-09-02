@@ -43,6 +43,8 @@ app.use(morgan("dev"));
 // CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  "https://www.kwami.dev",
+  "https://kwami.dev",
   "http://localhost:5173",
   "http://localhost:3000",
 ].filter(Boolean);
