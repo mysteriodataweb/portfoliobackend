@@ -15,6 +15,7 @@ import statsRouter from "./routes/stats.js";
 import contactRouter from "./routes/contact.js";
 import profileRouter from "./routes/profile.js";
 import cvRouter from "./routes/cv.js";
+import activitiesRouter from "./routes/activities.js";
 import authRouter from "./routes/auth.js";
 import { authenticateToken } from "./middleware/auth.js";
 import adminProjectsRouter from "./routes/admin/projects.js";
@@ -26,6 +27,7 @@ import adminProfileRouter from "./routes/admin/profile.js";
 import adminCvRouter from "./routes/admin/cv.js";
 import adminUploadRouter from "./routes/admin/upload.js";
 import adminMessagesRouter from "./routes/admin/messages.js";
+import adminActivitiesRouter from "./routes/admin/activities.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -87,6 +89,7 @@ app.use("/api/stats", statsRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/cv", cvRouter);
+app.use("/api/activities", activitiesRouter);
 app.use("/api/auth", authRouter);
 
 // Admin routes (protected)
@@ -99,6 +102,7 @@ app.use("/api/admin/profile", authenticateToken, adminProfileRouter);
 app.use("/api/admin/cv", authenticateToken, adminCvRouter);
 app.use("/api/admin/upload", authenticateToken, adminUploadRouter);
 app.use("/api/admin/messages", authenticateToken, adminMessagesRouter);
+app.use("/api/admin/activities", authenticateToken, adminActivitiesRouter);
 
 // Health check
 app.get("/api/health", (req, res) => {
