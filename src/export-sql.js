@@ -127,8 +127,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 `;
 
-  // Export data
-  const tables = ["projects", "blog_posts", "skill_categories", "skills", "certifications", "tools", "profile", "admin_users", "messages"];
+  // Export data. admin_users (password hash) and messages (visitors' personal data) stay out of a file meant to be shared.
+  const tables = ["projects", "blog_posts", "skill_categories", "skills", "certifications", "tools", "profile"];
 
   for (const table of tables) {
     const result = await localPool.query(`SELECT * FROM ${table}`);

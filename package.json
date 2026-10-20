@@ -8,7 +8,7 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "db:init": "node src/init-db.js",
-    "db:hash-password": "node -e \"const bcrypt = require('bcryptjs'); bcrypt.hash(process.argv[1], 10).then(h => console.log(h))\""
+    "admin:password": "node src/set-admin-password.js"
   },
   "dependencies": {
     "@prisma/client": "^7.9.0",

@@ -1,14 +1,48 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { query } from "../db.js";
 import { sendContactEmail } from "../services/email.js";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
-  const { name, email, subject, message } = req.body;
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: "Trop de messages envoyés, réessayez dans une heure" },
+});
+
+const MAX_LENGTHS = { name: 100, email: 254, subject: 200, message: 5000 };
+const FIELD_LABELS = { name: "nom", email: "email", subject: "sujet", message: "message" };
+const SUCCESS = {
+  success: true,
+  message: "Message envoyé avec succès ! Je vous répondrai rapidement.",
+};
+
+const readField = (value) => (typeof value === "string" ? value.trim() : "");
+
+router.post("/", contactLimiter, async (req, res) => {
+  // "website" is a field hidden from people: only bots fill it in. They get the usual answer so they don't adapt.
+  if (req.body.website) {
+    return res.json(SUCCESS);
+  }
+
+  const fields = {
+    name: readField(req.body.name),
+    email: readField(req.body.email),
+    subject: readField(req.body.subject),
+    message: readField(req.body.message),
+  };
+  const { name, email, subject, message } = fields;
 
   if (!name || !email || !message) {
     return res.status(400).json({ error: "Les champs nom, email et message sont requis" });
+  }
+
+  const tooLong = Object.keys(MAX_LENGTHS).find((field) => fields[field].length > MAX_LENGTHS[field]);
+  if (tooLong) {
+    return res.status(400).json({
+      error: `Le champ ${FIELD_LABELS[tooLong]} est trop long (${MAX_LENGTHS[tooLong]} caractères maximum)`,
+    });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,10 +63,7 @@ router.post("/", async (req, res) => {
       console.error("Erreur envoi email:", emailErr);
     }
 
-    res.json({
-      success: true,
-      message: "Message envoyé avec succès ! Je vous répondrai rapidement.",
-    });
+    res.json(SUCCESS);
   } catch (err) {
     console.error("Erreur enregistrement message:", err);
     res.status(500).json({ error: "Erreur serveur" });

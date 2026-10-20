@@ -244,7 +244,10 @@ async function initDB() {
     if (parseInt(existing.rows[0].count) === 0) {
       console.log(" Insertion des données de test...");
 
-      const adminPassword = process.env.ADMIN_PASSWORD || "admin";
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!adminPassword || adminPassword.length < 12) {
+        throw new Error("ADMIN_PASSWORD manquant ou trop court (12 caractères minimum)");
+      }
       const passwordHash = await bcrypt.hash(adminPassword, 10);
 
       const seedStatements = seedData.split(";").filter((s) => s.trim());

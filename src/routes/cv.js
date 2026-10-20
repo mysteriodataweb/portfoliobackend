@@ -1,6 +1,7 @@
 import { Router } from "express";
 import PDFDocument from "pdfkit";
 import { query } from "../db.js";
+import { escapeHtml, safeUrl } from "../utils/html.js";
 
 const router = Router();
 
@@ -45,7 +46,7 @@ router.get("/html", async (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CV - ${profile.full_name || ""}</title>
+  <title>CV - ${escapeHtml(profile.full_name)}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', -apple-system, sans-serif; color: #1a1a2e; background: #fff; line-height: 1.6; }
@@ -78,29 +79,29 @@ router.get("/html", async (req, res) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>${profile.full_name || ""}</h1>
-      <div class="title">${profile.title || ""}</div>
+      <h1>${escapeHtml(profile.full_name)}</h1>
+      <div class="title">${escapeHtml(profile.title)}</div>
       <div class="contact">
-        ${profile.email ? `<span>${profile.email}</span>` : ""}
-        ${profile.phone ? `<span>${profile.phone}</span>` : ""}
-        ${profile.location ? `<span>${profile.location}</span>` : ""}
-        ${profile.github_url ? `<a href="${profile.github_url}">GitHub</a>` : ""}
-        ${profile.linkedin_url ? `<a href="${profile.linkedin_url}">LinkedIn</a>` : ""}
+        ${profile.email ? `<span>${escapeHtml(profile.email)}</span>` : ""}
+        ${profile.phone ? `<span>${escapeHtml(profile.phone)}</span>` : ""}
+        ${profile.location ? `<span>${escapeHtml(profile.location)}</span>` : ""}
+        ${safeUrl(profile.github_url) ? `<a href="${safeUrl(profile.github_url)}">GitHub</a>` : ""}
+        ${safeUrl(profile.linkedin_url) ? `<a href="${safeUrl(profile.linkedin_url)}">LinkedIn</a>` : ""}
       </div>
     </div>
 
     ${sections.map((section) => `
       <div class="section">
-        <h2>${section.title}</h2>
+        <h2>${escapeHtml(section.title)}</h2>
         ${section.items.map((item) => `
           <div class="item">
             <div class="item-header">
-              <h3>${item.title}</h3>
-              <span class="date">${item.date_start}${item.date_end ? ` - ${item.date_end}` : ""}</span>
+              <h3>${escapeHtml(item.title)}</h3>
+              <span class="date">${escapeHtml(item.date_start)}${item.date_end ? ` - ${escapeHtml(item.date_end)}` : ""}</span>
             </div>
-            ${item.subtitle ? `<div class="subtitle">${item.subtitle}</div>` : ""}
-            ${item.description ? `<p>${item.description}</p>` : ""}
-            ${item.highlights?.length ? `<ul>${item.highlights.map((h) => `<li>${h}</li>`).join("")}</ul>` : ""}
+            ${item.subtitle ? `<div class="subtitle">${escapeHtml(item.subtitle)}</div>` : ""}
+            ${item.description ? `<p>${escapeHtml(item.description)}</p>` : ""}
+            ${item.highlights?.length ? `<ul>${item.highlights.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>` : ""}
           </div>
         `).join("")}
       </div>
@@ -112,12 +113,12 @@ router.get("/html", async (req, res) => {
         <div class="skills-grid">
           ${Object.entries(skillsByCategory).map(([cat, catSkills]) => `
             <div class="skill-category">
-              <h3>${cat}</h3>
+              <h3>${escapeHtml(cat)}</h3>
               ${catSkills.map((s) => `
                 <div class="skill-bar">
-                  <span class="name">${s.name}</span>
-                  <div class="bar"><div class="fill" style="width:${s.level}%"></div></div>
-                  <span class="level">${s.level}%</span>
+                  <span class="name">${escapeHtml(s.name)}</span>
+                  <div class="bar"><div class="fill" style="width:${Number(s.level) || 0}%"></div></div>
+                  <span class="level">${Number(s.level) || 0}%</span>
                 </div>
               `).join("")}
             </div>
@@ -141,9 +142,15 @@ router.get("/pdf", async (req, res) => {
   try {
     const { profile, sections, skills } = await getCVData();
 
+    // Header values must stay ASCII: an accent or a quote in the name would break the response.
+    const fileName = (profile.full_name || "cv")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Za-z0-9-]+/g, "_");
+
     const doc = new PDFDocument({ size: "A4", margin: 50 });
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="CV-${(profile.full_name || "cv").replace(/\s+/g, "_")}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="CV-${fileName}.pdf"`);
     doc.pipe(res);
 
     // Header

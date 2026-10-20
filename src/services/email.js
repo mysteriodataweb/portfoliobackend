@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import "dotenv/config";
+import { escapeHtml } from "../utils/html.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -10,22 +11,30 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendContactEmail = async ({ name, email, subject, message }) => {
+  // Everything below comes from the visitor: escaped so it shows as text, never as HTML or links.
+  const safe = {
+    name: escapeHtml(name),
+    email: escapeHtml(email),
+    subject: escapeHtml(subject),
+    message: escapeHtml(message),
+  };
+
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: "fredbiam9@gmail.com",
     replyTo: email,
-    subject: `[Portfolio] ${subject || "Nouveau message de contact"}`,
+    subject: `[Portfolio] ${(subject || "Nouveau message de contact").replace(/\s+/g, " ")}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f7f4ee; border-radius: 16px;">
         <h2 style="color: #171717; margin-bottom: 20px;">Nouveau message de contact</h2>
         <div style="background-color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-          <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Nom :</strong> <span style="color: #6B6B6B;">${name}</span></p>
-          <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Email :</strong> <span style="color: #6B6B6B;">${email}</span></p>
-          ${subject ? `<p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Sujet :</strong> <span style="color: #6B6B6B;">${subject}</span></p>` : ""}
+          <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Nom :</strong> <span style="color: #6B6B6B;">${safe.name}</span></p>
+          <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Email :</strong> <span style="color: #6B6B6B;">${safe.email}</span></p>
+          ${subject ? `<p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Sujet :</strong> <span style="color: #6B6B6B;">${safe.subject}</span></p>` : ""}
         </div>
         <div style="background-color: white; padding: 20px; border-radius: 12px;">
           <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Message :</strong></p>
-          <p style="color: #6B6B6B; white-space: pre-wrap; margin: 0;">${message}</p>
+          <p style="color: #6B6B6B; white-space: pre-wrap; margin: 0;">${safe.message}</p>
         </div>
         <p style="color: #6B6B6B; font-size: 12px; margin-top: 20px; text-align: center;">
           Envoyé depuis le formulaire de contact de votre portfolio

@@ -1,59 +1,47 @@
 import { Router } from "express";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import rateLimit from "express-rate-limit";
 import { query } from "../db.js";
-import "dotenv/config";
+import { authenticateToken, signToken } from "../middleware/auth.js";
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret";
-const JWT_EXPIRES_IN = "7d";
 
-router.post("/login", async (req, res) => {
+// Only failed attempts count, so a successful login never locks the admin out.
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  message: { error: "Trop de tentatives de connexion, réessayez dans 15 minutes" },
+});
+
+// Checked when the username is unknown, so that case takes as long as a wrong password.
+const DUMMY_HASH = bcrypt.hashSync("unknown-user", 10);
+
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
+    if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
       return res.status(400).json({ error: "Username et password requis" });
     }
 
-    const result = await query("SELECT * FROM admin_users WHERE username = $1", [username]);
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Identifiants incorrects" });
-    }
-
+    const result = await query("SELECT id, username, password_hash FROM admin_users WHERE username = $1", [username]);
     const user = result.rows[0];
-    const validPassword = await bcrypt.compare(password, user.password_hash);
+    const validPassword = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
 
-    if (!validPassword) {
+    if (!user || !validPassword) {
       return res.status(401).json({ error: "Identifiants incorrects" });
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
-    });
-
-    res.json({ token, username: user.username });
+    res.json({ token: signToken(user), username: user.username });
   } catch (err) {
     console.error("Erreur login:", err);
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
 });
 
-router.get("/me", async (req, res) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ error: "Token requis" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({ id: decoded.id, username: decoded.username });
-  } catch (err) {
-    return res.status(403).json({ error: "Token invalide" });
-  }
+router.get("/me", authenticateToken, (req, res) => {
+  res.json({ id: req.user.id, username: req.user.username });
 });
 
 export default router;

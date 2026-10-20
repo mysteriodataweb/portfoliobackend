@@ -196,5 +196,4 @@ INSERT INTO certifications (id, name, org, year) VALUES (3, 'Data Science Profes
 -- Donnees profile
 INSERT INTO profile (id, full_name, title, bio, photo, email, phone, location, github_url, linkedin_url, twitter_url, website_url, values_title, values, updated_at) VALUES (1, 'Alfred MysterioWebData', 'Data Scientist & Fullstack Developer', 'Passionné par la data science et le développement web, je crée des solutions innovantes alliant IA et performance.', NULL, 'contact@example.com', NULL, NULL, 'https://github.com', 'https://linkedin.com', NULL, NULL, 'Mes Valeurs', '["Innovation continue","Qualité du code","Impact mesurable"]', '"2026-07-15T06:23:51.475Z"') ON CONFLICT DO NOTHING;
 
--- Donnees admin_users
-INSERT INTO admin_users (id, username, password_hash) VALUES (1, 'admin', '$2b$10$1nGCgEAtzriqWN.xil2tWOI1kwciX25HQAm2StFEBer6j0ke/B1Mq') ON CONFLICT DO NOTHING;
+-- Le compte admin n'est pas exporte : creez-le avec `npm run admin:password`.

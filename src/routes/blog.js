@@ -41,7 +41,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:slug", async (req, res) => {
   try {
-    const result = await query("SELECT * FROM blog_posts WHERE slug = $1", [req.params.slug]);
+    const result = await query("SELECT * FROM blog_posts WHERE slug = $1 AND published = true", [req.params.slug]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Article non trouvé" });
     }
