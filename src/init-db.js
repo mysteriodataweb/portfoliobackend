@@ -196,12 +196,12 @@ const seedData = `
 
   INSERT INTO profile (full_name, title, bio, email, github_url, linkedin_url, values_title, values)
   VALUES (
-    'Alfred MysterioWebData',
-    'Data Scientist & Fullstack Developer',
+    'Alfred BIAM',
+    'Data & AI Engineer',
     'Passionné par la data science et le développement web, je crée des solutions innovantes alliant IA et performance.',
-    'contact@example.com',
-    'https://github.com',
-    'https://linkedin.com',
+    'fredbiam9@gmail.com',
+    'https://github.com/mysteriodataweb',
+    'https://www.linkedin.com/in/alfredbiam',
     'Mes Valeurs',
     '["Innovation continue","Qualité du code","Impact mesurable"]'
   );

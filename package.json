@@ -1,7 +1,7 @@
 {
   "name": "portfolio-backend",
   "version": "1.0.0",
-  "description": "Backend API pour le portfolio Alfred MysterioWebData",
+  "description": "Backend API pour le portfolio d'Alfred BIAM",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

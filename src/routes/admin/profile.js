@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { query } from "../../db.js";
+import { mapProfile } from "../profile.js";
 
 const router = Router();
 
@@ -9,18 +10,7 @@ router.get("/", async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Profil non trouvé" });
     }
-    const row = result.rows[0];
-    res.json({
-      id: row.id,
-      fullName: row.full_name,
-      title: row.title,
-      bio: row.bio,
-      photo: row.photo,
-      email: row.email,
-      github: row.github,
-      linkedin: row.linkedin,
-      twitter: row.twitter,
-    });
+    res.json(mapProfile(result.rows[0]));
   } catch (err) {
     console.error("Erreur get profile:", err);
     res.status(500).json({ error: "Erreur serveur" });
@@ -29,30 +19,41 @@ router.get("/", async (req, res) => {
 
 router.put("/", async (req, res) => {
   try {
-    const {
-      fullName, title, bio, photo, email, github, linkedin, twitter
-    } = req.body;
+    // Only the fields sent are written: the About page sends name, title, bio and photo, and must not wipe the links.
+    const fields = {
+      full_name: req.body.fullName,
+      title: req.body.title,
+      bio: req.body.bio,
+      photo: req.body.photo,
+      email: req.body.email,
+      github_url: req.body.github,
+      linkedin_url: req.body.linkedin,
+      twitter_url: req.body.twitter,
+    };
+    const entries = Object.entries(fields).filter(([, val]) => val !== undefined);
+    if (entries.length === 0) {
+      return res.status(400).json({ error: "Aucune modification fournie" });
+    }
+    const columns = entries.map(([col]) => col);
+    const values = entries.map(([, val]) => val);
 
-    const existing = await query("SELECT id FROM profile LIMIT 1");
+    const existing = await query("SELECT id FROM profile ORDER BY id LIMIT 1");
 
     if (existing.rows.length === 0) {
       const result = await query(
-        `INSERT INTO profile (full_name, title, bio, photo, email, github, linkedin, twitter)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-        [fullName, title, bio, photo, email, github, linkedin, twitter]
+        `INSERT INTO profile (${columns.join(", ")}) VALUES (${columns.map((_, i) => `$${i + 1}`).join(", ")}) RETURNING *`,
+        values
       );
-      return res.json(result.rows[0]);
+      return res.json(mapProfile(result.rows[0]));
     }
 
     const result = await query(
-      `UPDATE profile SET
-        full_name=$1, title=$2, bio=$3, photo=$4, email=$5,
-        github=$6, linkedin=$7, twitter=$8, updated_at=NOW()
-       WHERE id=$9 RETURNING *`,
-      [fullName, title, bio, photo, email, github, linkedin, twitter, existing.rows[0].id]
+      `UPDATE profile SET ${columns.map((col, i) => `${col}=$${i + 1}`).join(", ")}, updated_at=NOW()
+       WHERE id=$${values.length + 1} RETURNING *`,
+      [...values, existing.rows[0].id]
     );
 
-    res.json(result.rows[0]);
+    res.json(mapProfile(result.rows[0]));
   } catch (err) {
     console.error("Erreur update profile:", err);
     res.status(500).json({ error: "Erreur serveur" });
