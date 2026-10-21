@@ -29,6 +29,7 @@ router.get("/", authenticateToken, async (req, res) => {
       archived: row.archived,
       archivedAt: row.archived_at,
       createdAt: row.created_at,
+      source: row.source ?? null,
     }));
     res.json(messages);
   } catch (err) {

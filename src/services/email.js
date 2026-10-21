@@ -10,13 +10,14 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendContactEmail = async ({ name, email, subject, message }) => {
+export const sendContactEmail = async ({ name, email, subject, message, source }) => {
   // Everything below comes from the visitor: escaped so it shows as text, never as HTML or links.
   const safe = {
     name: escapeHtml(name),
     email: escapeHtml(email),
     subject: escapeHtml(subject),
     message: escapeHtml(message),
+    source: escapeHtml(source),
   };
 
   const mailOptions = {
@@ -31,6 +32,7 @@ export const sendContactEmail = async ({ name, email, subject, message }) => {
           <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Nom :</strong> <span style="color: #6B6B6B;">${safe.name}</span></p>
           <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Email :</strong> <span style="color: #6B6B6B;">${safe.email}</span></p>
           ${subject ? `<p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Sujet :</strong> <span style="color: #6B6B6B;">${safe.subject}</span></p>` : ""}
+          ${source ? `<p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Provenance :</strong> <span style="color: #6B6B6B;">${safe.source}</span></p>` : ""}
         </div>
         <div style="background-color: white; padding: 20px; border-radius: 12px;">
           <p style="margin: 0 0 10px 0;"><strong style="color: #171717;">Message :</strong></p>
