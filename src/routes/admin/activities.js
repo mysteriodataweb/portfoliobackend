@@ -1,14 +1,7 @@
 import { Router } from "express";
 import { query } from "../../db.js";
 import { activitiesReady, ACTIVITY_COLUMNS, mapActivity } from "../activities.js";
-
-const isHttpUrl = (value) => {
-  try {
-    return ["http:", "https:"].includes(new URL(value).protocol);
-  } catch {
-    return false;
-  }
-};
+import { isHttpUrl } from "../../utils/url.js";
 
 const readBody = (body) => ({
   title: typeof body.title === "string" ? body.title.trim() : "",

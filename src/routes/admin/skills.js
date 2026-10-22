@@ -1,5 +1,14 @@
 import { Router } from "express";
 import { query } from "../../db.js";
+import { isHttpUrl } from "../../utils/url.js";
+import { certificationUrlReady } from "../skills.js";
+
+// Link to the online certificate: optional, but when given it must be a real web address.
+const readCertificationUrl = (value) => {
+  const url = typeof value === "string" ? value.trim() : "";
+  if (!url) return { url: null };
+  return isHttpUrl(url) ? { url } : { error: "Le lien du certificat doit commencer par http:// ou https://" };
+};
 
 const router = Router();
 
@@ -112,9 +121,12 @@ router.delete("/:id", async (req, res) => {
 router.post("/certifications", async (req, res) => {
   try {
     const { name, org, year } = req.body;
+    const { url, error } = readCertificationUrl(req.body.url);
+    if (error) return res.status(400).json({ error });
+    await certificationUrlReady;
     const result = await query(
-      "INSERT INTO certifications (name, org, year) VALUES ($1,$2,$3) RETURNING *",
-      [name, org, year]
+      "INSERT INTO certifications (name, org, year, url) VALUES ($1,$2,$3,$4) RETURNING *",
+      [name, org, year, url]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -126,9 +138,12 @@ router.post("/certifications", async (req, res) => {
 router.put("/certifications/:id", async (req, res) => {
   try {
     const { name, org, year } = req.body;
+    const { url, error } = readCertificationUrl(req.body.url);
+    if (error) return res.status(400).json({ error });
+    await certificationUrlReady;
     const result = await query(
-      "UPDATE certifications SET name=$1, org=$2, year=$3 WHERE id=$4 RETURNING *",
-      [name, org, year, req.params.id]
+      "UPDATE certifications SET name=$1, org=$2, year=$3, url=$4 WHERE id=$5 RETURNING *",
+      [name, org, year, url, req.params.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Certification non trouvée" });

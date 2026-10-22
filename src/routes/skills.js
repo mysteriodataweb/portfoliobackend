@@ -1,6 +1,13 @@
 import { Router } from "express";
 import { query } from "../db.js";
 
+// Added after the first release: the column is created on start so the deployment needs no manual migration.
+export const certificationUrlReady = query(
+  "ALTER TABLE certifications ADD COLUMN IF NOT EXISTS url VARCHAR(500)"
+).catch((err) => {
+  console.error("Erreur ajout colonne certifications.url:", err);
+});
+
 const router = Router();
 
 router.get("/", async (req, res) => {
@@ -33,6 +40,7 @@ router.get("/", async (req, res) => {
         name: c.name,
         org: c.org,
         year: c.year,
+        url: c.url ?? null,
       })),
     });
   } catch (err) {
