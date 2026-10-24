@@ -6,6 +6,7 @@ export const mapProfile = (row) => ({
   fullName: row.full_name,
   title: row.title,
   bio: row.bio,
+  bioEn: row.bio_en ?? null,
   photo: row.photo,
   email: row.email,
   github: row.github_url,

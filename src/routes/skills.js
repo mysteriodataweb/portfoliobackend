@@ -19,6 +19,7 @@ router.get("/", async (req, res) => {
     const categoriesWithSkills = categories.rows.map((cat) => ({
       id: cat.id,
       name: cat.name,
+      nameEn: cat.name_en ?? null,
       icon: cat.icon,
       color: cat.color,
       sortOrder: cat.sort_order,

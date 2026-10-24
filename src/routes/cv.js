@@ -2,9 +2,17 @@ import { Router } from "express";
 import PDFDocument from "pdfkit";
 import { query } from "../db.js";
 import { escapeHtml, safeUrl } from "../utils/html.js";
+import { pick, readLang, translationsReady } from "../translations.js";
 
 const router = Router();
 
+const LABELS = {
+  fr: { document: "CV", skills: "Compétences" },
+  en: { document: "Resume", skills: "Skills" },
+};
+
+// The HTML and PDF versions take ?lang=en, where each text falls back to French until it is translated.
+// The JSON route returns the rows with both languages, and the frontend picks.
 router.get("/", async (req, res) => {
   try {
     const { profile, sections, skills } = await getCVData();
@@ -16,12 +24,13 @@ router.get("/", async (req, res) => {
 });
 
 async function getCVData() {
+  await translationsReady;
   const profileResult = await query("SELECT * FROM profile ORDER BY id LIMIT 1");
   const profile = profileResult.rows[0] || {};
 
   const sectionsResult = await query("SELECT * FROM cv_sections ORDER BY sort_order");
   const itemsResult = await query("SELECT * FROM cv_items ORDER BY sort_order");
-  const skillsResult = await query("SELECT sc.name as category, s.name, s.level FROM skills s JOIN skill_categories sc ON s.category_id = sc.id ORDER BY sc.sort_order, s.sort_order");
+  const skillsResult = await query("SELECT sc.name as category, sc.name_en as category_en, s.name, s.level FROM skills s JOIN skill_categories sc ON s.category_id = sc.id ORDER BY sc.sort_order, s.sort_order");
 
   const sections = sectionsResult.rows.map((section) => ({
     ...section,
@@ -31,9 +40,31 @@ async function getCVData() {
   return { profile, sections, skills: skillsResult.rows };
 }
 
+/** The CV texts in the requested language, for the HTML and PDF versions. */
+async function getLocalizedCV(lang) {
+  const { profile, sections, skills } = await getCVData();
+  return {
+    profile,
+    sections: sections.map((section) => ({
+      ...section,
+      title: pick(lang, section.title, section.title_en),
+      items: section.items.map((item) => ({
+        ...item,
+        title: pick(lang, item.title, item.title_en),
+        subtitle: pick(lang, item.subtitle, item.subtitle_en),
+        description: pick(lang, item.description, item.description_en),
+        highlights: lang === "en" && item.highlights_en?.length ? item.highlights_en : item.highlights,
+      })),
+    })),
+    skills: skills.map((s) => ({ ...s, category: pick(lang, s.category, s.category_en) })),
+  };
+}
+
 router.get("/html", async (req, res) => {
   try {
-    const { profile, sections, skills } = await getCVData();
+    const lang = readLang(req.query.lang);
+    const labels = LABELS[lang];
+    const { profile, sections, skills } = await getLocalizedCV(lang);
 
     const skillsByCategory = {};
     skills.forEach((s) => {
@@ -42,11 +73,11 @@ router.get("/html", async (req, res) => {
     });
 
     const html = `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CV - ${escapeHtml(profile.full_name)}</title>
+  <title>${labels.document} - ${escapeHtml(profile.full_name)}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', -apple-system, sans-serif; color: #1a1a2e; background: #fff; line-height: 1.6; }
@@ -109,7 +140,7 @@ router.get("/html", async (req, res) => {
 
     ${Object.keys(skillsByCategory).length ? `
       <div class="section">
-        <h2>Compétences</h2>
+        <h2>${labels.skills}</h2>
         <div class="skills-grid">
           ${Object.entries(skillsByCategory).map(([cat, catSkills]) => `
             <div class="skill-category">
@@ -140,7 +171,9 @@ router.get("/html", async (req, res) => {
 
 router.get("/pdf", async (req, res) => {
   try {
-    const { profile, sections, skills } = await getCVData();
+    const lang = readLang(req.query.lang);
+    const labels = LABELS[lang];
+    const { profile, sections, skills } = await getLocalizedCV(lang);
 
     // Header values must stay ASCII: an accent or a quote in the name would break the response.
     const fileName = (profile.full_name || "cv")
@@ -150,7 +183,7 @@ router.get("/pdf", async (req, res) => {
 
     const doc = new PDFDocument({ size: "A4", margin: 50 });
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="CV-${fileName}.pdf"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${labels.document}-${fileName}.pdf"`);
     doc.pipe(res);
 
     // Header
@@ -204,7 +237,7 @@ router.get("/pdf", async (req, res) => {
 
     if (Object.keys(skillsByCategory).length) {
       if (doc.y > 600) doc.addPage();
-      doc.fontSize(16).fillColor("#6366f1").text("Compétences");
+      doc.fontSize(16).fillColor("#6366f1").text(labels.skills);
       doc.moveDown(0.2);
       doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor("#e2e8f0").lineWidth(1).stroke();
       doc.moveDown(0.3);

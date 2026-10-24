@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { query } from "../db.js";
+import { postTranslations, translationsReady } from "../translations.js";
 
 const mapPost = (row) => ({
   id: row.id,
@@ -13,6 +14,7 @@ const mapPost = (row) => ({
   readTime: row.read_time,
   content: row.content,
   published: row.published,
+  ...postTranslations(row),
 });
 
 const router = Router();
@@ -28,7 +30,9 @@ router.get("/", async (req, res) => {
     }
     if (search) {
       params.push(`%${search}%`);
-      sql += ` AND (title ILIKE $${params.length} OR excerpt ILIKE $${params.length})`;
+      const p = `$${params.length}`;
+      sql += ` AND (title ILIKE ${p} OR excerpt ILIKE ${p} OR title_en ILIKE ${p} OR excerpt_en ILIKE ${p})`;
+      await translationsReady;
     }
     sql += " ORDER BY date DESC";
     const result = await query(sql, params);

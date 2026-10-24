@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { query } from "../../db.js";
+import { postTranslations, translationsReady } from "../../translations.js";
 
 const mapBlog = (row) => ({
   id: row.id,
@@ -15,6 +16,7 @@ const mapBlog = (row) => ({
   published: row.published,
   archived: row.archived,
   archivedAt: row.archived_at,
+  ...postTranslations(row),
 });
 
 const router = Router();
@@ -43,12 +45,13 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { slug, title, excerpt, category, tags, image, date, readTime, content, published } = req.body;
+    const { slug, title, excerpt, category, tags, image, date, readTime, content, published, titleEn, excerptEn, contentEn } = req.body;
     const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : tags;
+    await translationsReady;
     const result = await query(
-      `INSERT INTO blog_posts (slug, title, excerpt, category, tags, image, date, read_time, content, published)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [slug, title, excerpt, category, tagsJson, image, date, readTime, content, published ?? true]
+      `INSERT INTO blog_posts (slug, title, excerpt, category, tags, image, date, read_time, content, published, title_en, excerpt_en, content_en)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [slug, title, excerpt, category, tagsJson, image, date, readTime, content, published ?? true, titleEn, excerptEn, contentEn]
     );
     res.json(mapBlog(result.rows[0]));
   } catch (err) {
@@ -70,6 +73,9 @@ router.put("/:id", async (req, res) => {
       read_time: req.body.readTime,
       content: req.body.content,
       published: req.body.published,
+      title_en: req.body.titleEn,
+      excerpt_en: req.body.excerptEn,
+      content_en: req.body.contentEn,
     };
 
     const setClauses = [];
@@ -87,6 +93,7 @@ router.put("/:id", async (req, res) => {
     setClauses.push(`updated_at=NOW()`);
     values.push(req.params.id);
 
+    await translationsReady;
     const result = await query(
       `UPDATE blog_posts SET ${setClauses.join(", ")} WHERE id=$${idx} RETURNING *`,
       values

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { query } from "../../db.js";
 import { mapProfile } from "../profile.js";
+import { translationsReady } from "../../translations.js";
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router.put("/", async (req, res) => {
       full_name: req.body.fullName,
       title: req.body.title,
       bio: req.body.bio,
+      bio_en: req.body.bioEn,
       photo: req.body.photo,
       email: req.body.email,
       github_url: req.body.github,
@@ -37,6 +39,7 @@ router.put("/", async (req, res) => {
     const columns = entries.map(([col]) => col);
     const values = entries.map(([, val]) => val);
 
+    await translationsReady;
     const existing = await query("SELECT id FROM profile ORDER BY id LIMIT 1");
 
     if (existing.rows.length === 0) {

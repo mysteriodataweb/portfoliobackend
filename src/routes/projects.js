@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { query } from "../db.js";
+import { projectTranslations } from "../translations.js";
 
 const mapProject = (row) => ({
   id: row.id,
@@ -19,6 +20,7 @@ const mapProject = (row) => ({
   approach: row.approach,
   results: row.results,
   challenges: row.challenges,
+  ...projectTranslations(row),
 });
 
 const router = Router();

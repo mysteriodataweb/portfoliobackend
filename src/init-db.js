@@ -245,6 +245,7 @@ async function initDB() {
 
       // Projects live in their own script, which also updates an existing database.
       await query(fs.readFileSync(new URL("../migrate-projets-reels.sql", import.meta.url), "utf8"));
+      await query(fs.readFileSync(new URL("../migrate-traductions-en.sql", import.meta.url), "utf8"));
 
       await query(
         "INSERT INTO admin_users (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET password_hash = $2",
