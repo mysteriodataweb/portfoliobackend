@@ -43,8 +43,4 @@ export const postTranslations = (row) => ({
   contentEn: row.content_en ?? null,
 });
 
-/** The English text when the visitor reads in English and one was written, otherwise the French one. */
-export const pick = (lang, french, english) =>
-  lang === "en" && typeof english === "string" && english.trim() ? english : french;
-
 export const readLang = (value) => (value === "en" ? "en" : "fr");
