@@ -6,6 +6,7 @@
 -- 3. Ajoute ou met a jour les projets reels (cle : slug). Une image deja envoyee depuis l'admin
 --    (URL Supabase) est conservee ; sinon le projet recoit sa couverture /images/projects/<slug>.svg
 --    (fichiers du frontend).
+--    Le choix des projets affiches sur l'accueil (case de l'admin) n'est pas modifie.
 
 BEGIN;
 
@@ -72,7 +73,6 @@ ON CONFLICT (slug) DO UPDATE SET
   github_url = EXCLUDED.github_url,
   demo_url = COALESCE(projects.demo_url, EXCLUDED.demo_url),
   date = EXCLUDED.date,
-  featured = EXCLUDED.featured,
   published = true,
   archived = false,
   archived_at = NULL,
