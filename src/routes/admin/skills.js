@@ -2,6 +2,7 @@ import { Router } from "express";
 import { query } from "../../db.js";
 import { isHttpUrl } from "../../utils/url.js";
 import { certificationUrlReady } from "../skills.js";
+import { translationsReady } from "../../translations.js";
 
 // Link to the online certificate: optional, but when given it must be a real web address.
 const readCertificationUrl = (value) => {
@@ -32,10 +33,11 @@ router.get("/", async (req, res) => {
 
 router.post("/categories", async (req, res) => {
   try {
-    const { name, icon, color, sort_order } = req.body;
+    const { name, name_en, icon, color, sort_order } = req.body;
+    await translationsReady;
     const result = await query(
-      "INSERT INTO skill_categories (name, icon, color, sort_order) VALUES ($1,$2,$3,$4) RETURNING *",
-      [name, icon, color, sort_order || 0]
+      "INSERT INTO skill_categories (name, name_en, icon, color, sort_order) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      [name, name_en || null, icon, color, sort_order || 0]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -46,10 +48,11 @@ router.post("/categories", async (req, res) => {
 
 router.put("/categories/:id", async (req, res) => {
   try {
-    const { name, icon, color, sort_order } = req.body;
+    const { name, name_en, icon, color, sort_order } = req.body;
+    await translationsReady;
     const result = await query(
-      "UPDATE skill_categories SET name=$1, icon=$2, color=$3, sort_order=$4 WHERE id=$5 RETURNING *",
-      [name, icon, color, sort_order || 0, req.params.id]
+      "UPDATE skill_categories SET name=$1, name_en=$2, icon=$3, color=$4, sort_order=$5 WHERE id=$6 RETURNING *",
+      [name, name_en || null, icon, color, sort_order || 0, req.params.id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Catégorie non trouvée" });
