@@ -2,6 +2,12 @@ import { Router } from "express";
 import { query } from "../db.js";
 import { projectTranslations } from "../translations.js";
 
+// Free-form page in Markdown (text, code, screenshots), shown instead of the four fixed sections when filled in.
+// Added after the first release: the column is created on start so the deployment needs no manual migration.
+export const projectContentReady = query("ALTER TABLE projects ADD COLUMN IF NOT EXISTS content TEXT").catch((err) => {
+  console.error("Erreur ajout colonne projects.content:", err);
+});
+
 const mapProject = (row) => ({
   id: row.id,
   slug: row.slug,
@@ -20,6 +26,7 @@ const mapProject = (row) => ({
   approach: row.approach,
   results: row.results,
   challenges: row.challenges,
+  content: row.content ?? null,
   ...projectTranslations(row),
 });
 

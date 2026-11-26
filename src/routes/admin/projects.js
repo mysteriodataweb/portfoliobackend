@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { query } from "../../db.js";
 import { projectTranslations, translationsReady } from "../../translations.js";
+import { projectContentReady } from "../projects.js";
 
 const mapProject = (row) => ({
   id: row.id,
@@ -22,6 +23,7 @@ const mapProject = (row) => ({
   approach: row.approach,
   results: row.results,
   challenges: row.challenges,
+  content: row.content ?? null,
   ...projectTranslations(row),
 });
 
@@ -54,19 +56,19 @@ router.post("/", async (req, res) => {
     const {
       title, slug, category, shortDescription, fullDescription,
       image, techStack, githubUrl, demoUrl, date, featured,
-      published, context, approach, results, challenges,
-      titleEn, shortDescriptionEn, fullDescriptionEn, contextEn, approachEn, resultsEn, challengesEn,
+      published, context, approach, results, challenges, content,
+      titleEn, shortDescriptionEn, fullDescriptionEn, contextEn, approachEn, resultsEn, challengesEn, contentEn,
     } = req.body;
 
     const techStackJson = Array.isArray(techStack) ? JSON.stringify(techStack) : techStack;
 
-    await translationsReady;
+    await Promise.all([translationsReady, projectContentReady]);
     const result = await query(
-      `INSERT INTO projects (slug, title, category, short_description, full_description, image, tech_stack, github_url, demo_url, date, featured, published, context, approach, results, challenges,
-         title_en, short_description_en, full_description_en, context_en, approach_en, results_en, challenges_en)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) RETURNING *`,
-      [slug, title, category, shortDescription, fullDescription, image, techStackJson, githubUrl, demoUrl, date, featured, published, context, approach, results, challenges,
-        titleEn, shortDescriptionEn, fullDescriptionEn, contextEn, approachEn, resultsEn, challengesEn]
+      `INSERT INTO projects (slug, title, category, short_description, full_description, image, tech_stack, github_url, demo_url, date, featured, published, context, approach, results, challenges, content,
+         title_en, short_description_en, full_description_en, context_en, approach_en, results_en, challenges_en, content_en)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25) RETURNING *`,
+      [slug, title, category, shortDescription, fullDescription, image, techStackJson, githubUrl, demoUrl, date, featured, published, context, approach, results, challenges, content,
+        titleEn, shortDescriptionEn, fullDescriptionEn, contextEn, approachEn, resultsEn, challengesEn, contentEn]
     );
     res.json(mapProject(result.rows[0]));
   } catch (err) {
@@ -94,6 +96,7 @@ router.put("/:id", async (req, res) => {
       approach: req.body.approach,
       results: req.body.results,
       challenges: req.body.challenges,
+      content: req.body.content,
       title_en: req.body.titleEn,
       short_description_en: req.body.shortDescriptionEn,
       full_description_en: req.body.fullDescriptionEn,
@@ -101,6 +104,7 @@ router.put("/:id", async (req, res) => {
       approach_en: req.body.approachEn,
       results_en: req.body.resultsEn,
       challenges_en: req.body.challengesEn,
+      content_en: req.body.contentEn,
     };
 
     const setClauses = [];
@@ -118,7 +122,7 @@ router.put("/:id", async (req, res) => {
     setClauses.push(`updated_at=NOW()`);
     values.push(req.params.id);
 
-    await translationsReady;
+    await Promise.all([translationsReady, projectContentReady]);
     const result = await query(
       `UPDATE projects SET ${setClauses.join(", ")} WHERE id=$${idx} RETURNING *`,
       values

@@ -10,7 +10,8 @@ export const translationsReady = query(`
     ADD COLUMN IF NOT EXISTS context_en TEXT,
     ADD COLUMN IF NOT EXISTS approach_en TEXT,
     ADD COLUMN IF NOT EXISTS results_en TEXT,
-    ADD COLUMN IF NOT EXISTS challenges_en TEXT;
+    ADD COLUMN IF NOT EXISTS challenges_en TEXT,
+    ADD COLUMN IF NOT EXISTS content_en TEXT;
   ALTER TABLE blog_posts
     ADD COLUMN IF NOT EXISTS title_en VARCHAR(255),
     ADD COLUMN IF NOT EXISTS excerpt_en TEXT,
@@ -35,6 +36,7 @@ export const projectTranslations = (row) => ({
   approachEn: row.approach_en ?? null,
   resultsEn: row.results_en ?? null,
   challengesEn: row.challenges_en ?? null,
+  contentEn: row.content_en ?? null,
 });
 
 export const postTranslations = (row) => ({
